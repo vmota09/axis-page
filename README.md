@@ -7,32 +7,45 @@ Projeto separado do repositório do produto de propósito: a página muda de
 endereço, vai ao ar antes do produto e pode cair sem afetar ninguém em campo.
 O app de auditoria não pode nada disso.
 
-## Só quero um link para compartilhar
+## O site publicado — GitHub Pages
 
-A pasta `site/` é a página inteira pronta para hospedar, sem servidor, sem
-instalar nada. Arraste ela (ou o `axis-site.zip`) para qualquer host estático:
+A pasta `docs/` é o que está no ar. O nome não é estilo: **raiz** e **`/docs`**
+são as duas únicas pastas que o GitHub Pages aceita publicar de uma branch, e
+a raiz aqui é ocupada pelo projeto.
 
-- **cloudflare.com/drop** — solta a pasta e sai um link na hora. O link vale
-  1 hora; entrar na conta dentro desse prazo o torna permanente.
-- **app.netlify.com/drop** — mesma ideia, com conta gratuita.
+Configuração no GitHub, uma vez só:
+**Settings → Pages → Source: Deploy from a branch → Branch: `main` / `/docs`.**
+
+Endereço: `https://vmota09.github.io/axis-page/`
 
 Nessa versão o formulário não grava e-mail: ele abre o e-mail já preenchido
-para o visitante enviar. É `site/`, e não `public/`, justamente por isso — a
+para o visitante enviar. É `docs/`, e não `public/`, justamente por isso — a
 diferença entre as duas é uma linha (`AXIS_MODO_PREVIA`).
 
-Quando o Worker estiver publicado, o link definitivo passa a servir `public/`,
-e aí o cadastro grava sozinho. Ver [DEPLOY.md](DEPLOY.md).
-
-Regerar a pasta depois de mexer em `public/index.html`:
+Depois de mexer em `public/index.html`, regenere e publique:
 
 ```bash
-npm run site
+npm run site        # regenera docs/ a partir de public/
+git add docs && git commit -m "atualiza a página" && git push
 ```
+
+O Pages republica sozinho em 1 a 2 minutos.
+
+**Repositório privado não funciona no plano Free do GitHub** — Pages a partir
+de repo privado exige Pro. E, mesmo no Pro, o site publicado é público de
+qualquer forma: o privado seria só o código. Como esta página existe para ser
+lida por estranhos, repositório público é o caminho natural.
+
+Alternativas de host, se um dia quiser sair do GitHub: **app.netlify.com/drop**
+ou **cloudflare.com/drop** aceitam a pasta `docs/` arrastada, sem terminal.
+
+Quando o Worker estiver publicado, o endereço definitivo passa a servir
+`public/`, e aí o cadastro grava sozinho. Ver [DEPLOY.md](DEPLOY.md).
 
 ## Arquivos
 
 ```
-site/                      Cópia pronta para host estático (sem servidor).
+docs/                      O que o GitHub Pages publica (sem servidor).
 public/index.html          A página inteira — HTML, CSS e JS num arquivo só.
 public/laudo-exemplo.html  Laudo de demonstração, com dados fictícios.
 worker/index.js            Serve os estáticos e grava os e-mails no D1.
