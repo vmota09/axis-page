@@ -1,0 +1,14 @@
+# Landing page do AXIS — servidor de uma página só.
+# Mesma stack do produto: FastAPI + SQLite, SQL cru, sem ORM.
+
+fastapi>=0.115
+uvicorn[standard]>=0.32
+
+# Postgres — só é usado se DATABASE_URL existir. Sem a variável, roda em
+# SQLite e este pacote nem é importado. Está aqui para que plugar um Postgres
+# gratuito depois seja definir uma variável, e não refazer o deploy.
+psycopg[binary]>=3.2
+
+# Testes
+pytest>=8.0
+httpx>=0.27          # exigido pelo TestClient do FastAPI

@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AXIS — Laudo de demonstração (dados fictícios)</title>
+<style>
+  @page { size: A4; margin: 18mm 15mm; }
+  * { box-sizing: border-box; }
+  /* Documento é papel: claro sempre. Sem isto, o laudo aberto no celular do
+     auditor em modo escuro sai com texto escuro sobre fundo escuro — o HTML
+     não herda o fundo branco de lugar nenhum quando abre como arquivo. */
+  :root { color-scheme: light; }
+  html, body { background:#fff; }
+  body { font-family:"IBM Plex Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color:#0f172a; font-size:10.5pt;
+         line-height:1.5; margin:0; }
+  /* Só na tela: no papel quem dá a margem é o @page. O laudo é aberto no
+     celular do auditor direto do HTML que a API devolve, e sem isto o texto
+     encosta na borda do visor. */
+  @media screen {
+    body { padding:22px 18px; max-width:210mm; margin:0 auto; }
+  }
+
+  /* Cabeçalho — aplicação já validada: fundo branco, símbolo preto,
+     número do laudo em mono. O filete ciano é o único uso do acento aqui,
+     e é decorativo justamente porque ciano não se lê sobre branco. */
+  .marca { display:flex; align-items:center; gap:9px; }
+  .simbolo { height:24px; width:auto; }
+  .wordmark { font-size:15pt; font-weight:700; letter-spacing:1.5px;
+               color:#101214; }
+  .laudo-n { margin-left:auto; font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size:8pt;
+              color:#64748b; letter-spacing:.5px; }
+  .regua { height:3px; background:#101214; margin:9px 0 16px;
+            position:relative; }
+  .regua::before { content:""; position:absolute; left:0; top:0; height:3px;
+                    width:52px; background:#22d3ee; }
+  h1 { font-size:19pt; color:#101214; margin:0; letter-spacing:-0.4px; }
+  .sub { color:#64748b; font-size:9pt; margin-top:2px; }
+
+  .meta { display:flex; gap:26px; margin:16px 0 20px; flex-wrap:wrap; }
+  .meta div { font-size:9pt; }
+  .meta b { display:block; color:#64748b; font-weight:600;
+             text-transform:uppercase; font-size:7.5pt; letter-spacing:.5px; }
+
+  /* Índice de conformidade — superfície escura, número grande em cor
+     semântica: a aplicação de destaque validada na identidade. */
+  .score { background:#101214; border-radius:10px; padding:18px 16px;
+            margin:18px 0 22px; text-align:center; }
+  .score .n { font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size:42pt; font-weight:700;
+               color:#fbbf24; line-height:1;
+               letter-spacing:-1px; }
+  .score .c { font-size:11pt; font-weight:700; color:#fbbf24;
+               margin-top:6px; letter-spacing:1.5px; text-transform:uppercase; }
+  .score .d { font-size:8.5pt; color:#94a3b8; margin-top:7px; }
+
+  h2 { font-size:12pt; color:#101214; margin:22px 0 8px;
+        border-bottom:1px solid #cbd5e1; padding-bottom:4px;
+        border-left:3px solid #22d3ee; padding-left:8px; }
+
+  table { width:100%; border-collapse:collapse; font-size:8.5pt; }
+  th { background:#101214; color:#fff; text-align:left; padding:6px 7px;
+        font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size:7pt; text-transform:uppercase;
+        letter-spacing:.6px; font-weight:600; }
+  td { padding:6px 7px; border-bottom:1px solid #e2e8f0; vertical-align:top; }
+  tr.nao_avaliado td { color:#94a3b8; }
+  .cod { font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size:8pt; color:#64748b; }
+  .item { font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size:7pt; color:#94a3b8; }
+  /* Mono nos valores medidos: o brief pede que dado medido leia como dado
+     medido, não como opinião. */
+  .num { font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size:8pt; white-space:nowrap; }
+  /* O limite é a única célula que fica longa ("entre 3.0 e 4.5 cm"); em mono e
+     sem quebra ela sozinha empurrava a tabela para fora da tela do celular. */
+  .lim { white-space:normal; }
+  .badge { color:#fff; padding:2px 7px; border-radius:9px; font-size:7.5pt;
+            font-weight:600; white-space:nowrap; }
+
+  .acao { border-left:4px solid #cbd5e1; padding:8px 12px; margin-bottom:10px;
+           background:#f8fafc; }
+  .acao-head { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+  .prio { background:#101214; color:#fff; width:20px; height:20px;
+           border-radius:50%; display:inline-flex; align-items:center;
+           justify-content:center; font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size:8pt;
+           font-weight:700; }
+  .sev { font-weight:700; font-size:8.5pt; text-transform:uppercase; }
+  .ref { margin-left:auto; font-size:7.5pt; color:#94a3b8;
+          font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .acao-motivo { font-size:8.5pt; color:#475569; }
+  .acao-texto { font-size:9.5pt; font-weight:600; margin-top:3px; }
+  .ok { background:#f0fdf4; border-left:4px solid #15803d; padding:10px 12px;
+         color:#15803d; font-weight:600; }
+  .aviso { background:#fffbeb; border-left:4px solid #fbbf24; padding:10px 12px;
+            font-size:8.5pt; margin-top:22px; color:#78350f; }
+  footer { margin-top:24px; border-top:1px solid #cbd5e1; padding-top:8px;
+            font-size:7.5pt; color:#94a3b8; }
+  .dominio { font-family:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; color:#64748b; }
+</style></head><body>
+
+<div class="demo-faixa">
+  <strong>LAUDO DE DEMONSTRAÇÃO</strong>
+  <span>Todos os valores desta página são fictícios, gerados para mostrar o formato
+  de saída do AXIS. Nenhuma edificação real foi auditada, e este documento não vale
+  como laudo para nenhuma finalidade.</span>
+</div>
+<style>
+  .demo-faixa{background:#101214;color:#fbbf24;border-radius:10px;
+    padding:13px 16px;margin:0 0 20px;display:flex;gap:14px;align-items:baseline;
+    flex-wrap:wrap;line-height:1.5}
+  .demo-faixa strong{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    font-size:8pt;letter-spacing:1.6px;white-space:nowrap}
+  .demo-faixa span{color:#cbd5e1;font-size:8.5pt;flex:1;min-width:220px}
+  /* Impresso, a faixa continua — um PDF de exemplo circulando sem o aviso
+     seria exatamente o problema que ela existe para evitar. */
+  @media print{.demo-faixa{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+
+<header>
+  <div class="marca">
+    <img class="simbolo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGsAAABgCAYAAAAaeIzPAAAb7ElEQVR42tV9fZRlVXXn77fve91VXV31PqvbwsZGBI2MQIuoRBZCEFiYEcUo4yjxAx0FMmYcdKBFMSASBGPGzESYZpSPhU4SNJIFShy+HREXcUGkQTGJPWQwgN1d9b6quj7ee/fuPX/ce6tuPd57de99r5p41+oF1V3vvnPOPnvv3/6dvfchAGLwx/q8x4b0HQjeI8F/NXi3Rf7NCf7fi/z9ej5x52YAMpFxa2R8EvwBALff+/gbIqxQSG6Cz4SCU7y4j9Nj82S6zEf6bbJewooucHTnJhVg2s+xY7IuAGzbtm10bm7xjXR4ImBHG3goYGM0uiCmYfYPCj6SoT5crVafjXzeeixC2o0U93PLY8/nyyfRsbeaYQeAl8A4akSLhv2APenRbpurVv+un8A4RBM1DFMR3SChufPK5fKUq/gPAM4l+ao1X2RWJ/Bdj/bfZyuVRyMLpzE2VtpN1m1dvVypdKqYXGHASWT/Uava1Y1a5bIeYzXnIAiLKX5XwsHmiuWLzPANUs4iUTYzi5gViyx21IdtInksDR8eGR091JHxn7Tb83OB6bE1Ni2HJqhC6QtCuRHEdmDVuBEZa+jDKOKcvHFk9Lnm0sJjXcbK9dSszt0a16cJAG/z5pdMZje4N4I8ywwAzO1wxmt9twfAIUkze5rGD9Zq0z8KFsFbx82ZAdDOFcu7hDzfzMJN5KzxOY8k1fTnjWrluG5jlHUSkg1gLr1cLne4s8F9wBeUtYJdmUkwXoboy8zaJA832r25YvHdgQ+RIaHFzrkKgLavUTzfzNodKLXfI2YmBA/dNDlZ7tDAxMKyhGYgrimMmj6Mbd26hZL9npCvCSa7YUDtz5qZB2AjIbflipPvCrVuSCaeER/r+yiRy8zMjcD1JI8ni47XZX1M8K/nEQCWabs3UfhqX6OQHSJ8Vt/u283jpdKrwp+HpGHhgmZp+NOUvs9IAmbPHDiwt9Jtw0uKAXVT/7VMn/UwHxax5+5EoXSBUP5tRKOGHe8oyXFR/M/IYsoQTKEDwMvnSx8lZUegVUk1VwMY8WDw/85aaLATPjOmqetl+tjDDLJjsWxsy5YtGbNvAxiJwPb10N62iBy+cWTT882lhUejWpcyXnQA2MTERIHi3AZgLI1WBb/vts27sL20tL+L1lP+lZg/zbp6MSnlYOHWc1wZM1PCPr958+bJGN+31sL7FJJs2EmRl6Qcv0dSAPvOfK32s14xodNFQ4ZFEcV5BwFooVB4mUFuDHzUemlV9Ds9ikyIONmlpcX/HYnrmGajjY+Xj3QyuDlYT0mpVUsO8b7FxcVKL18qQwhkB4HrAsAUcoEIx1MuWCr/ZWYK8vzNpdJvdfiIJHMhAJOsXUlyNOUm97XKbFelUvmHEFX2Wqxh7VamELiXy+XyAD4UMBMODs7DAH2NOoYrI4tsCfyNA8DN58tvJuU9QXiQBlSIme1rt5auWUvDh+kbLEFcZst0irPhnSIydRC1KqpdnkDelSuVTo0Ey0nmm4HgGqYft5IUKK+an5/fv1awPsxIvh+s7/Zv/k40+9iLCm8IofKLHf7bYmiVlytO/j7J306rVSQzZvp4vZ77GlaOUthPWByyGWQf2M4IFaS5XOkkEZ4Q8GdpTaAi/ZmVY2YehW/IFSc/EJPZIAAtlUrjhP2RWfpjFgPMiE8Be5oRM9xXs168x8EFCamsF4AakgKyp1OOs9F8f2mfLxQKuRjQWwBo25OPk3w5YF5KqO5A7fZGpfIAVsjlvv7yYByRdJusl8ttORy0rwRwPW0QSQCPAbZESiml3yMAFTJv4MLS4sL/wcqBZVe3USwWDwH5DQAbU0J1AFhyxd7T8qF6rFBHUsLxQZl1QLzzRGRsLTvd57sXDDynXp05PuvIsWb2ZabXMAlM8ScLhcKhwTukl2A9yGUkiwNBdeC6AytQPc4m60o3dfM7SaP6vpB5cnJys2e4AUA+RVynJB0DLmlUZ24CkFlYWGguLS7cs3Fk08tF+No+i91Xu0hu8oDx5uLinV0WMbAI5eMouC6lz/ffZ/i1N9o8tzXXaiL+KfUL6Kb1Ooy0KI/muvY2IbenWFQlKerpzxrVmetCoBK8w1G3+SlVey6y0Im1S8APFApbX9MLbFBwLckNKckDf/ywK+een6tE3h/rlDqtGUz7KAAY8bEBhE6Q/w1AO7IbPQCcm5urkPpZkmmOPkLt2qBon9sR2ggAL18qvYPC01JCdY9kxtQena1VbopA9UTOvle8NOw0NQeA5srl1wE4KQVcVwCOqe4VeN8OOb7I+z0ATr1avVVNHyKZeDGWmQ3IGyKxIAFgampqE/x4LDVvagY1sYs7NlpspTgY0H3VxOjZH5DMpDBTShIg/qJWqzUiiK1z4YzKy9DlWDxBvLg58lkHgLew1L4gOBRNA9Vdkg5Mb29UKj/o0KrYSiEHicAlALdUKh1i4LtT8IAWBLBNgX09alK7aF+mXp/5oan+TQrtMgBmtJmIj9WxLVu2ktiZMng3ADS1eVfwOQxwOi0D+qkkpCdcxbkinEgB1z2SNOCearX6iz5x0PL4hXaZmS2moNRI8B4AwBFHOAA009bPkdySMo4L0eufB1DdSWBVVqXbHSw06PkBJM+zdOaXAEBd1iqu4dsy1Wr1FzC7IYhpNObCiJntbzedvwQg2LOnVSgUXkPioym1ymfV1Z5Tt/ll9Dn+iEPjpfFZvUjaflql+XzpDBG+Gv6kE8F1kI6q/lOuXrkHK8n9/fyjAhB3Y/ZqM9sXE8prkGP4pfn5ffuBI7K+SZQQqltKraIRl8/NzUUPFTkMM7gejwU6fH5KHlCDmd34DLCE3lm1UbOhAOTA3r3TUPtCDCivIEVVnxofG70eeF0W2NMcL5R/l5TfHRCqP9KoztyCtXM9urmhvmYwKbrjGr5OAHiFQuFogqenBRZq1sgIvhkxqWuZjVD7nHq98jU1ezIAGz1z3QmQhkufffbZRf+vjtogtC+mBF4r4zfsTGD6+iUicT1PipcnqXA+GpgSL8XuJM3+ulKpPN8HWPSL71pU+2wfrfbom9n76vXKnTjqqA3AY+2Jwr4PC+WYQaC6p/qden3mhxhSyjYH3jn9+UMbG9s6md3o/RxAOYW9VgDmQU8MymG6TTpOqpibK5b+Vihv7TBpocn0zMMJjcbM4wBk8+apgpNt7ybxkhTuwof/sAUljp+rVP4pAf3Vby426OEj1/CHlt2o/45kOSVcF4M9PFet/qQPkoqHYB35jJk1OxbFJemY4WuNxsxPgaOyADzJtC8R4SEYJK3M8Gdzlco/xoDqndWbvZJp1zVv0PM1QT8yiPbSz561AcCQByDTmJ5+HLBvBL6rFVA+jpntd1vOlf5Yn2qPl0qvEsHHU0N10lGzZwQaF6rHPt1YL2H5WarFLb8TpBN7KUyJo2rPOg7ujHB/acMLBSAC+7yZ7iVlI8ksSVHDJwKo7gAwR3n1AGllSoCEXh5QYkONWddLWD6LYF5auO6RhAi+UalU5hKwEH3LUavV6rM05ww1/V9q+j3z9B2ztZm/ArAB2NPMFYunUfh7KUGFRzKjpg/Xq9VvIgWrnhTFDatYW8fL5SMdxRM+c5HIDPoLbtZUT46ZnZ3eg+QZs9Gqfq8jWLYuG1YAIF8o/5jC16eNqwCQ5p1cq9WGVbS3Sh6ZdTKBKp6dS5GRFBP3g0mzuwJBxd2h0YoQt4dTlx6xjJsrlj9C8vWRuqqkWuWo6q31+IKKU7vMuM4tzsusy8RtcnJyrO3pblJeHgTCcU1KuMBtmnd8rVb7+RqwN9oTI/I720YLheZrFfpWkifCoBC7pV6pfLPjfQTA8fFDCpJpPUFiKgWYCSwBDsDcY+r1+q9iQPVe3RCsC9mw/HMmJSzv9TsCwG239Ww6cnhMrYoudIYkVO0/1VeqKbwu7ESIspZ379jY1i2ZEfdNNJ4JWzzVRI6UcM19GvgtE4XS+Gyt8j8i73UAuE62tZPkIQPSStfW6/VnYmoVY/59bM1K668sVyw9KJQ394C/Uf7OARBQd4CZTavZ5cGCZrHS1CPUoFVNPsbL5Vc6rp1mwjMJnEBycvlLVqr6ZUUw9nS9WjkaQDPc/ePl8hGO4nGkSysL/Kg9nXVkx/T09CLWJx1iKD7LOvyFVywWX63gb/trtcqchBqUCaQjAKBm/wLDjwF8v910vu/D6GWytkODto0WCs3jjHYagNOhOI6OjNIXDoLNoRHQkOnYlBMTExObZmdnl8KN5ahdRcqmQKsSH776uer4zPT09IGEdFgSNmhNYSV1gASAtslhGeGGoNQ0hNxOcK4kZtY2s8eNdi+Ae8X0p0FMsooeCn8oFovbXJMTBTwDWHyzUY6IaCICQMCIgKRr/EOKqv1idna2FmhtO5crnULKOQOYP8fUHqjXZr6FZIeKSdcZACyJz1rrpQqAGXg/U3VmgxPhlUVV+zuD3S7Qu2q12lNdKJbln3O5yR0QO5XEGQq80RHm/QGIb99s2bwxgXUgaNdFdnCGwi8O4gbMrGWKS4bEz64lSMbp3ZQ0yPYmiltOF+gVfrCJBxT6nVmf34v+3vIuLBQKORU5nsYzDTidwDGhIwvMqRcxi2kY8IypPVivzbwl0KpWrlg8T+jclFKrXD8Athsa1ZkLsLpp1ro1LmMfLUr7pb34sFXx0sTE5CuYsZMBOwPgm4Q8NKqJWGnnNijZ7AWs+psajZnHAGQKhcKY0nmCwKGpoTqs4hA7KpXK3g6gpgP6rZ4a16upxqCLk4kgMQlIU29iYvIVdOwdoL2dsNeT3ASwGzhIYt5iBKt2gy+oIzYCe5oKuVjIl6UMgP0EGNOrKpXq86H/60YMpPBZTMv4DqLCoZBcAMgVi6eRcgEMZ5IcWwft6Rdg11sO/83C9PQ0AMvn84caM0+SqVog+Mc2ar+o12aOC8ZvpVJpzDN+AkAO6n41iLeGVaiYCLonNYmh/dZ8vnwyiM+QPANBmN+B3taD7opqQEbNrlqYnt4bahXoXC7C8ZRkbZADqJcFsdoGAC1Peas4crYfPGbOLBaLJ1ar1QMYXgebZf8yzLKeDAB3bGzrlnyxvAuCByk8w8w0WJywlni968JCBvzJRjV/vW+q9jTHi8UTQH5gEKZCTe9qNKp/4wsfrUKh/F4Kz1bVlqk2hXyNZ7wY8Q8uY6/zMPPZswDahULhTKWzS8jtwaIAB68Kf5Wv8hRnztam7waO2gA85eaKpR8I5aQUwgoXNMpZOrlcbrM42d0GbIueOJjZonmyY3Z2+mmkq2jpqVnDoJjCHnsXgZm/DQQV9i862IJySTpq+j1fUEdsBJ5q5fOl9wWCclNqlZjZDTWfs9wAwKVk/gjkyzqAkYnIZmbsSqzdZzHxQqftERvl7Lx8sfSnpHwyQHXD2ghJx+QGGr4o0NdVq9V/BCDFYnGTQnaD3I5kpwBRqL6v3czsmJ/fVwXg5XKTx9KxR7DSB5EdiJhGO61RqTyI7pX4hoRtXjt9VtxOZ6GQ/RYDhdKfBYKKgoeD8WiEOyTJLICWGs4LcuIzAFzP+EmSh6XIBl6mqmj4QsBbCgCj2LUkex6sBp/5ch8QlbTN6wuym5hA6zIA2hPF4qUi8omgP2AG6wscQiY9PFwUkg5Jh0DD1L7jQd88W5u5LfSh+Xx+O8GLLL2gHDXdPTW19cYI+3FaAJx6+T6/ZQPluFyhfF4k9hyEkWecvMFuahq0wimdRUfujPiB9SpxDU2rs4rEBX4F4Iek3Q3PeyiIb1aZ51yhfKsI3z/QCbB5pzeq1fsCX6X5Qvkh+v07+gEVC4a5V93mMXNzc7Uevqrb+navO0P8HIyon7LRYvGQjeDfA5zEYKlivZBXmHMRFdASDLsNdj8E92WAR4OEGnRBnd54ofAmh85DKX1owP/pXzWqlfeGcdpEofzvHeFfxkSUATOvX6nXKp+MxKBxT+dX/ZxUWMvnVvlC+XYK35lyx/bSHkNwWrz8D2rPgXzYYPco7UdB4iS6CEg7xmi5YumHQjkxJVRXAxbgtY9tNBr/L2Rl8oXSIxR5bcy8wnBeLlTeUK/vf2IQZiOTgBMMAYWbKxbfRQ5FUMtttIPkS5iZqtmThN2vJvdS2480Go16l1Ah2hM9upl8E10qvZ9IJagV/k/1K41G45+DOK01USy+jpDjEhRYMAAbG1W8qwG8DclrtFJBd//3pqZG8kutn4I8cgDzZ+GCAICqzZL4sZndh4zc35iefqIjkHQiwaWuNcZCoTBudB4HsD3FGNX35faMQzumUqnMB9/fzudL/5GOfDXFJvWPaTw9u16v3IGUB5VJvlAAuPmm+xGKvHIArQqb4ztm+veA3UzT79Zry+AgXPRsh/Zo3DEqMp8S4rD0WoWMmV5RqVTnEDmqJ7EZAzTBNPJqbN9+N555ppUAzCUWVpAsuW0UtvifQUmrUW6QE1iH6qX1WuXGyPGCg9XtBtwUC+JNTE6+Aq5eZMa0RQUZNX24sZJVu+yblLJH0hEJYmaeCI/KzR74wwbwJz3ARureTVFpCwCbKCy+kyKHDxCzZEztKZpzUq1W2RVhHGTZEac/vPOpHk+vEpHNSHmAamaeA/sveGEmL+G1HvA72DAN30czU5KXdvSHGmofDC4HoMAfpiVWQYqp/lKoZ9Rq+34WMXNuD8iaRGA+8CmVTgH4nkESYGB2S7VaDWkkLzIep9Fo1AT2x2TfuuZ+a60kCwrnjzt8KeMw8nFUerkXLIQ/CO4FScqtKYCWCU5qzMw8hpXT1WEF0QIAuULpRyJywgCs+qxAj65Wq8+je6G5AJBcofyQCN+YelMAhPHk4CKb2GAj9qKb2IXBjrIU5s+B2a6IoOIEhnHJ5PC2gvelFNQyq66qXwouSeulOQTQpi03MElLHInSrumz/tZLa9aqXtTx8fKR4vArEe4vSUUIzXBAoB9YWlqaQ/yONHHDDiuVSpuN/BbAXILPR9GfmNnTIxuy583Pz/dDngrAWVpa+OeNo6NHCeVoJG+ELAA8IbePbBz95dLS4m5070DwAkZ+rWhaAJhkcJ6f3JKuMwyAO2q12q+AWLaeCSeuruISkoelbIFqfqG+XLpv3775uH7cXPmsmSWpHVv9eUAhuCpo9Wo9UOEqxeilWeGHtVQqjSu4C0AO6WCrCbw/WFpa+hcM9+hEgvH9loG3IN1tBWFW7f2N2synsXZ5UbjZMs3mQmXjyOiIiJyCdM0oPVKKSmhzcfE+xKhBkzWoJXNN3i3+aWjaAu5HarXaI5HBDCuBhADMVV4baH1SqG4BVG+Z4uKEWu0BcDKCL5vp/yWYhpFwzExp+ETk1oY1+7r3gop+MGh6/oAK8PVIYDmooMLxZQKO8hwRvn0g/s/wdb9SP3al4rKJqlQqcwb7NNIBr+DWBhlzlNfG2Wy9zFrQD7b0O8zwfhiSVq77fsB0L9R9daPRaGA4aVnLAfrYli1bMm19LCiAA1Id1aPacnj0wvT0/oRIdHVYUyzfT/LUQVKxzbOz6vWZ7/WD8n0nSAcXEqlamHr0y9b/ImDM02pVN4QkAJB1vZtF+NKUZHKQAIMv+jmFgyVkKvRSwNopBR5047YvRIiC2HeRCACdmJw8AuDbBmjk2HKIr60xAUuoUcERTfl6+t1i3JTmL6NmTzZq+evQ+4buWFoBIDNbrf7EDDet0R+qn+/ySNmRLxbP7+e7egnL6OqHg34QSYGF37YNdm9ldd/yNDA91OoQtbr5YvkaIS8YgPUP2j5gZ3CtBDBYIYYBYMvhFWZWTWnug1sb5PJNk5M9L0zr1hzS9a9J4ge7VC8moJl5KwZLIg0nnA02jJcvlP4ryZ2DHM/4ORX23Vpt5vuIcVlLHAgOwFmYnt5rwFUpLwIIecNy1rPL4wrL9y1O9l1B76JUnWHMbKbVcn6A1cku3QhaW8N5E36W78vyxdJdFLloQI2imS14tEvQv9wpyeWjIZTPNKozX1XT3SkbNouZeQQ+Ml4svhFd7lOWLnRKhoYLLDmb4E/MxyO1+fl9jRimjz3iu3B3ar5Y/KAx80jER6VNI9Bg119/oL95jnP5aK/5tM105yBAg2TWMbmm22aSjp3s5Uqlkyk8PmVCpF9sBW7L5ba8FCuVIt2ua2IENGQi7IAbhA2n5Avle0jnFsCmBhUUgl61Xrt5DdahHCfUrtla7W41uzMAG24q7RKeUuxy+fULhEHlhZEJprHhSnKUju4M3tHG6iYh0aP6MGGzDf+izkNzxckP5Yvl++nwQQpPj9xNP1BiDknC7NNBr9r1ENayqfVoO810IQXYYMAbmppdtXXr1rGoHKK73MZLpVc6xseRvN9SV5Njqjebwz/fQP4yaD0QvHPbyNiW1kRGdZt4OFKJHYCdAHCH0GfOI0IatLAhrP+9o1GdORvpGkwmDpRzhdKVIvK5lBahTTJrnn22Xp+5OgyUoznrbr5YvpbkJUPKBdSg8sIAPANYDca2ESOEjQPMAyisyhFcXQ3pDGmnG2AzAjuuWq3+OmI11ivNmwBYLBbHFHwc4GFIXbeMBs07tlarPQtAlp15oVDIGWQXgHEMp2yUK2iSeZJTJF9KcivIAoDRiK2PJmg6Q2LnbZnKgX6o7rdtHRSqx/3ezOLi4uKGkbG9IjwHyTuCBqw8x9QgTf8uZSd08FDynQF9M8zJOMs641c/qpkpVkwcIgBjmLnyoaCyqvr5RrX611g7dXmtXR4XxofWwZmtzdxmag+mvMTGt0rk2Zia2gTAXXa0NDlrnZxulNOL/uE67uw2yaya7WrUKlcMqFHdLh+Nw8r7g1FcHLiVdFeHmJWLzWYRHbHGS3Fwa6vW4/EQ3oFldl2jOnNhhMW2gzwWBZBpNGYeM7MvBYFyO+nGI9luZrOtbnHWb+oTmj0HhHjApY3qzMexmu1Pe0QzSE2VC8Bp1CqXq9ndQW/7Vsz3BZfl2BPz+/ZNA5CV9jq0X3ahh34jhBRE/hkze1rVe+tsZfqaHho1qBlM6s+Wb87L0M6B6V0U2RDSaBFwpR3xZ1CYaAbi8hB8LSf8Z0fGFoT8fcS7WPnFFlBYARl2W2uZ8XqvvfT+udnZJ7H63t/1fOL6My4uLjaXFhe/NTIy2gZwNMlxkhIkFAV/GD6OmR2A2scateod0Thr2XfliuVvOiLnqmob6ZparZdgEIX2YWymZg3Cvg2Vr9br07ujtBkO/v3LcQRr8FPnDlHF2w18ixGvhKFEmANyyWC/JviQS7s5ct+WXzMdpZ2mpqZGFpqtrwvlvT7gBg6+X16ZG7sst6nOG/EowDuo7u2R0tQweXTQDtp9qw+TUk+9GI7oREul0mbXdZ3x8fHmysU1L9x43SofkSsWfw+QDwE4hsAEujfgTTr5RL9vhiaBOaPNEHgO4FMGfRJeZnejsf/pyO9HC+sM6x/wxhXcWve0OBFzHl0jifjbaH/gVcIyrO6Fjq1bt47Nz89v6rXg/s1+MXSENDNjr8+bGTvflc1m25VKZbEHcy0YfmrbIIs/LBMZy0F2DiQq9Rf7iQbRtk6INe4t3Gk1bShE8f8H6685xiqvr8YAAAAASUVORK5CYII=" alt="">
+    <span class="wordmark">AXIS</span>
+    <span class="laudo-n">Laudo nº EXEMPLO-0001</span>
+  </div>
+  <div class="regua"></div>
+  <h1>Pré-diagnóstico de Acessibilidade</h1>
+  <div class="sub">Accessibility X-ray and Intelligent Scanning · Triagem automatizada segundo a ABNT NBR 9050:2020 + ABNT NBR 16537:2016</div>
+</header>
+
+<div class="meta">
+  <div><b>Local auditado</b>Escola Municipal Exemplo — Balneário Camboriú/SC</div>
+  <div><b>Data</b>20/08/2026</div>
+  <div><b>Responsável</b>Demonstração pública — sem responsável técnico designado</div>
+  <div><b>Norma de referência</b>ABNT NBR 9050:2020 + ABNT NBR 16537:2016</div>
+</div>
+
+<div class="score">
+  <div class="n">63.8%</div>
+  <div class="c">PARCIALMENTE CONFORME</div>
+  <div class="d">8 de 15 critérios
+    avaliados estão conformes · 3 critérios não avaliados</div>
+</div>
+
+<h2>Plano de ação priorizado</h2>
+
+        <div class="acao">
+          <div class="acao-head">
+            <span class="prio">1</span>
+            <span class="sev" style="color:#c2410c">
+              Alto</span>
+            <span class="ref">POR03 · NBR 9050 · 6.11.2</span>
+          </div>
+          <div class="acao-motivo">Detectado 'bola' — esperado alavanca.</div>
+          <div class="acao-texto">Maçaneta tipo bola exige preensão e rotação do punho — não conforme.</div>
+        </div>
+        <div class="acao">
+          <div class="acao-head">
+            <span class="prio">2</span>
+            <span class="sev" style="color:#c2410c">
+              Alto</span>
+            <span class="ref">TAT01 · NBR 16537, 5.2</span>
+          </div>
+          <div class="acao-motivo">Medido 18 cm — fora do limite (entre 25.0 e 60.0 cm).</div>
+          <div class="acao-texto">Sinaliza obstáculo, desnível ou mudança de direção. Item de segurança.</div>
+        </div>
+        <div class="acao">
+          <div class="acao-head">
+            <span class="prio">3</span>
+            <span class="sev" style="color:#c2410c">
+              Alto</span>
+            <span class="ref">VIS01 · NBR 16537, 5.1</span>
+          </div>
+          <div class="acao-motivo">Medido 22 pontos — fora do limite (≥ 30.0 pontos).</div>
+          <div class="acao-texto">LRV = Light Reflectance Value. Contraste insuficiente torna a sinalização invisível para pessoas com baixa visão.</div>
+        </div>
+        <div class="acao">
+          <div class="acao-head">
+            <span class="prio">4</span>
+            <span class="sev" style="color:#a16207">
+              Médio</span>
+            <span class="ref">CAL03 · NBR 9050 · 6.12.3</span>
+          </div>
+          <div class="acao-motivo">Medido 4.2 % — fora do limite (≤ 3.0 %).</div>
+          <div class="acao-texto">Inclinação lateral de escoamento. Acima de 3% desestabiliza cadeira de rodas.</div>
+        </div>
+        <div class="acao">
+          <div class="acao-head">
+            <span class="prio">5</span>
+            <span class="sev" style="color:#a16207">
+              Médio</span>
+            <span class="ref">VIS02 · NBR 9050 · 5.4.4</span>
+          </div>
+          <div class="acao-motivo">Ausente — item exigido pela norma não foi identificado.</div>
+          <div class="acao-texto">Instalar o elemento exigido.</div>
+        </div>
+        <div class="acao">
+          <div class="acao-head">
+            <span class="prio">6</span>
+            <span class="sev" style="color:#a16207">
+              Médio</span>
+            <span class="ref">COR03 · NBR 9050 · 6.9.1</span>
+          </div>
+          <div class="acao-motivo">Medido 5.2 cm — fora do limite (entre 3.0 e 4.5 cm).</div>
+          <div class="acao-texto">Adequar ao parâmetro normativo.</div>
+        </div>
+        <div class="acao">
+          <div class="acao-head">
+            <span class="prio">7</span>
+            <span class="sev" style="color:#a16207">
+              Médio</span>
+            <span class="ref">COR04 · NBR 9050 · 6.9.1</span>
+          </div>
+          <div class="acao-motivo">Medido 3 cm — fora do limite (≥ 4.0 cm).</div>
+          <div class="acao-texto">Adequar ao parâmetro normativo.</div>
+        </div>
+
+<h2>Detalhamento por critério</h2>
+<table>
+  <thead><tr><th>Cód.</th><th>Critério</th><th>Medido</th><th>Exigido</th><th>Status</th></tr></thead>
+  <tbody>
+        <tr class="conforme">
+          <td class="cod">RAM01</td>
+          <td>Inclinação máxima admitida para rampa<div class="item">NBR 9050 · 6.6.2</div></td>
+          <td class="num">7.9 %</td>
+          <td class="num lim">≤ 8.33 %</td>
+          <td><span class="badge" style="background:#15803d">
+              Conforme</span></td>
+        </tr>
+        <tr class="conforme">
+          <td class="cod">RAM05</td>
+          <td>Desnível vencido por segmento de rampa<div class="item">NBR 9050 · 6.6.2 (Tabela)</div></td>
+          <td class="num">0.45 m</td>
+          <td class="num lim">≤ 1.0 m</td>
+          <td><span class="badge" style="background:#15803d">
+              Conforme</span></td>
+        </tr>
+        <tr class="conforme">
+          <td class="cod">DES01</td>
+          <td>Desnível de soleira na entrada<div class="item">NBR 9050 · 6.1.3</div></td>
+          <td class="num">4 mm</td>
+          <td class="num lim">≤ 5 mm sem tratamento; 5–20 mm com chanfro; > 20 mm é degrau</td>
+          <td><span class="badge" style="background:#15803d">
+              Conforme</span></td>
+        </tr>
+        <tr class="conforme">
+          <td class="cod">CAL01</td>
+          <td>Largura da faixa livre de circulação da calçada<div class="item">NBR 9050 · 6.12.3</div></td>
+          <td class="num">1.35 m</td>
+          <td class="num lim">≥ 1.2 m</td>
+          <td><span class="badge" style="background:#15803d">
+              Conforme</span></td>
+        </tr>
+        <tr class="conforme">
+          <td class="cod">CAL02</td>
+          <td>Altura livre de obstáculos sobre a rota acessível<div class="item">NBR 9050 · 6.12.3</div></td>
+          <td class="num">2.2 m</td>
+          <td class="num lim">≥ 2.1 m</td>
+          <td><span class="badge" style="background:#15803d">
+              Conforme</span></td>
+        </tr>
+        <tr class="nao_conforme">
+          <td class="cod">CAL03</td>
+          <td>Inclinação transversal da calçada<div class="item">NBR 9050 · 6.12.3</div></td>
+          <td class="num">4.2 %</td>
+          <td class="num lim">≤ 3.0 %</td>
+          <td><span class="badge" style="background:#b91c1c">
+              Não conforme</span></td>
+        </tr>
+        <tr class="conforme">
+          <td class="cod">RAM03</td>
+          <td>Largura livre mínima da rampa<div class="item">NBR 9050 · 6.6.2</div></td>
+          <td class="num">1.2 m</td>
+          <td class="num lim">≥ 1.2 m</td>
+          <td><span class="badge" style="background:#15803d">
+              Conforme</span></td>
+        </tr>
+        <tr class="conforme">
+          <td class="cod">POR01</td>
+          <td>Vão livre mínimo da porta<div class="item">NBR 9050 · 6.11.2</div></td>
+          <td class="num">0.82 m</td>
+          <td class="num lim">≥ 0.8 m</td>
+          <td><span class="badge" style="background:#15803d">
+              Conforme</span></td>
+        </tr>
+        <tr class="conforme">
+          <td class="cod">POR02</td>
+          <td>Altura livre mínima da porta<div class="item">NBR 9050 · 6.11.2</div></td>
+          <td class="num">2.1 m</td>
+          <td class="num lim">≥ 2.1 m</td>
+          <td><span class="badge" style="background:#15803d">
+              Conforme</span></td>
+        </tr>
+        <tr class="nao_conforme">
+          <td class="cod">POR03</td>
+          <td>Tipo de maçaneta<div class="item">NBR 9050 · 6.11.2</div></td>
+          <td class="num">bola</td>
+          <td class="num lim">alavanca</td>
+          <td><span class="badge" style="background:#b91c1c">
+              Não conforme</span></td>
+        </tr>
+        <tr class="nao_avaliado">
+          <td class="cod">POR04</td>
+          <td>Altura de instalação da maçaneta<div class="item">NBR 9050 · 6.11.2</div></td>
+          <td class="num">—</td>
+          <td class="num lim">entre 0.8 e 1.1 m</td>
+          <td><span class="badge" style="background:#94a3b8">
+              Não avaliado</span></td>
+        </tr>
+        <tr class="nao_conforme">
+          <td class="cod">TAT01</td>
+          <td>Largura da faixa de piso tátil de alerta<div class="item">NBR 16537, 5.2</div></td>
+          <td class="num">18 cm</td>
+          <td class="num lim">entre 25.0 e 60.0 cm</td>
+          <td><span class="badge" style="background:#b91c1c">
+              Não conforme</span></td>
+        </tr>
+        <tr class="nao_avaliado">
+          <td class="cod">TAT02</td>
+          <td>Largura da faixa de piso tátil direcional<div class="item">NBR 16537, 5.3</div></td>
+          <td class="num">—</td>
+          <td class="num lim">entre 20.0 e 60.0 cm</td>
+          <td><span class="badge" style="background:#94a3b8">
+              Não avaliado</span></td>
+        </tr>
+        <tr class="nao_conforme">
+          <td class="cod">VIS01</td>
+          <td>Diferença de LRV entre piso tátil e piso adjacente<div class="item">NBR 16537, 5.1</div></td>
+          <td class="num">22 pontos</td>
+          <td class="num lim">≥ 30.0 pontos</td>
+          <td><span class="badge" style="background:#b91c1c">
+              Não conforme</span></td>
+        </tr>
+        <tr class="nao_conforme">
+          <td class="cod">VIS02</td>
+          <td>Símbolo Internacional de Acesso na entrada acessível<div class="item">NBR 9050 · 5.4.4</div></td>
+          <td class="num">False</td>
+          <td class="num lim">True</td>
+          <td><span class="badge" style="background:#b91c1c">
+              Não conforme</span></td>
+        </tr>
+        <tr class="nao_conforme">
+          <td class="cod">COR03</td>
+          <td>Diâmetro da seção do corrimão<div class="item">NBR 9050 · 6.9.1</div></td>
+          <td class="num">5.2 cm</td>
+          <td class="num lim">entre 3.0 e 4.5 cm</td>
+          <td><span class="badge" style="background:#b91c1c">
+              Não conforme</span></td>
+        </tr>
+        <tr class="nao_conforme">
+          <td class="cod">COR04</td>
+          <td>Afastamento mínimo entre corrimão e parede<div class="item">NBR 9050 · 6.9.1</div></td>
+          <td class="num">3 cm</td>
+          <td class="num lim">≥ 4.0 cm</td>
+          <td><span class="badge" style="background:#b91c1c">
+              Não conforme</span></td>
+        </tr>
+        <tr class="nao_avaliado">
+          <td class="cod">COR05</td>
+          <td>Prolongamento do corrimão nas extremidades<div class="item">NBR 9050 · 6.9.1</div></td>
+          <td class="num">—</td>
+          <td class="num lim">≥ 0.3 m</td>
+          <td><span class="badge" style="background:#94a3b8">
+              Não avaliado</span></td>
+        </tr></tbody>
+</table>
+
+
+      <div class="aviso"><strong>Documento preliminar.</strong> Os parâmetros
+      normativos deste sistema ainda não foram conferidos contra o texto oficial
+      da ABNT NBR 9050:2020. Este relatório é um pré-diagnóstico de triagem e
+      não substitui laudo técnico emitido por profissional habilitado com ART ou
+      RRT registrada no CREA ou no CAU.</div>
+
+<footer>Gerado automaticamente pelo sistema AXIS · <span class="dominio">axis.tech</span>
+· Instituto Federal Catarinense, Campus Camboriú · Os valores medidos por sensor
+de dispositivo móvel carregam incerteza de instrumento e devem ser confirmados em
+inspeção presencial quando próximos ao limite normativo.</footer>
+
+</body></html>

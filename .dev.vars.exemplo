@@ -1,0 +1,6 @@
+# Copie este arquivo para `.dev.vars` para rodar `npx wrangler dev` com acesso
+# à listagem. O `.dev.vars` fica fora do git de propósito — em produção o token
+# é um secret na Cloudflare (`npx wrangler secret put AXIS_ADMIN_TOKEN`).
+
+AXIS_ADMIN_TOKEN="troque-por-um-segredo-longo"
+AXIS_SAL="qualquer-texto-fixo-para-o-hash-do-freio"

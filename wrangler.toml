@@ -1,0 +1,25 @@
+# Configuração do deploy na Cloudflare. Ver DEPLOY.md para o passo a passo.
+
+name = "axis-page"
+main = "worker/index.js"
+# Trave numa data que o runtime instalado conhece. Uma data no futuro em
+# relação ao workerd publicado faz o `wrangler deploy` recusar o envio.
+compatibility_date = "2025-10-11"
+
+# Os arquivos estáticos. A Cloudflare devolve direto do CDN, sem invocar o
+# Worker e sem consumir a cota de requisições — só as rotas /api/ custam algo.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# Banco dos e-mails captados.
+# O database_id sai de `npx wrangler d1 create axis-leads` — cole aqui.
+[[d1_databases]]
+binding = "DB"
+database_name = "axis-leads"
+database_id = "00000000-0000-0000-0000-000000000000"  # troque pelo id real
+
+# Observabilidade ligada: sem isto, um erro no cadastro não aparece em lugar
+# nenhum, e o formulário falharia em silêncio.
+[observability]
+enabled = true

@@ -1,0 +1,19 @@
+{
+  "name": "axis-page",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Landing page do AXIS — página estática + captura de e-mail na Cloudflare",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "banco:local": "wrangler d1 execute axis-leads --local --file=./schema.sql",
+    "banco:producao": "wrangler d1 execute axis-leads --remote --file=./schema.sql",
+    "site": "node scripts/gerar-site.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.9.0",
+    "vitest": "^3.0.0",
+    "wrangler": "^4.0.0"
+  }
+}
