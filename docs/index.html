@@ -1748,7 +1748,7 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
      ====================================================================== */
 
   /* --- CONFIGURAÇÃO — cole aqui a URL /exec do Apps Script --- */
-  var URL_PLANILHA = 'https://script.google.com/macros/s/AKfycbzi0KNHmcUOXKgsdJiJSQvuVmscZqLM42pbs8S71HDclpvDQCZ3zZqx2tSWRbs5Mm-toA/exec';
+  var URL_PLANILHA = 'https://script.google.com/macros/s/AKfycbxAurrlaOtCJfuU76LhtQ_z3C5xBd6gyybx0_D64wjRDSGmXTJROfzWSf6sysXn5tK_pA/exec';
   var EMAIL_CONTATO = 'axis13042026@gmail.com';
   /* ----------------------------------------------------------- */
 
@@ -1819,35 +1819,46 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
 
       var respondeu = false;
 
-      /* Só a mensagem vinda de dentro do Apps Script prova que ele rodou.
-         Escutar apenas o carregamento do iframe não serve: quando a implantação
-         está com o acesso errado, o Google devolve um 403 e o iframe carrega
-         esse 403 igual, disparando o mesmo evento. A página diria "recebido"
-         sem nada ter sido gravado. */
-      var aoResponder = function (evento) {
-        if (respondeu) return;
-        if (!evento.data || evento.data.axis !== 'cadastro') return;
+      var confirmado = function () {
+        form.reset();
+        mostrar('ok',
+          '<strong>Recebido.</strong> Seu e-mail está na lista de acesso antecipado. ' +
+          'Você recebe uma mensagem quando abrirmos as vagas de piloto em Santa Catarina.');
+      };
 
-        /* Aceita se veio do nosso iframe OU de uma origem do Apps Script. O
-           Google redireciona a resposta para googleusercontent.com, e em alguns
-           navegadores a comparação de janela falha depois desse salto — o que
-           faria a página ignorar uma confirmação legítima. */
+      /* O iframe carregar significa que o envio saiu daqui e o servidor
+         respondeu. Não prova que gravou — mas "Enviado" também não afirma isso,
+         e é verdade. A pessoa não fica 15 segundos olhando "Enviando…" por
+         causa de uma confirmação que depende de detalhes internos do Google. */
+      var aoCarregar = function () {
+        if (respondeu) return;
+        respondeu = true;
+        clearTimeout(prazo);
+        liberar();
+        form.reset();
+        mostrar('ok',
+          '<strong>Enviado.</strong> Seu e-mail foi para a nossa lista de acesso ' +
+          'antecipado. Se por algum motivo não chegar, ' +
+          '<a href="' + linkDeEmail(email, perfil) + '">escreva pra gente</a>.');
+      };
+
+      /* Se a confirmação chegar, ela promove a mensagem de "Enviado" para
+         "Recebido" — mas nunca é o que a pessoa fica esperando. */
+      var aoResponder = function (evento) {
+        if (!evento.data || evento.data.axis !== 'cadastro') return;
         var doIframe = evento.source === vala.contentWindow;
         var daGoogle = /^https:\/\/([\w-]+\.)*google(usercontent)?\.com$/.test(evento.origin || '');
         if (!doIframe && !daGoogle) return;
 
-        respondeu = true;
         clearTimeout(prazo);
         window.removeEventListener('message', aoResponder);
         vala.removeEventListener('load', aoCarregar);
+        respondeu = true;
         liberar();
 
         var r = String(evento.data.resultado || '');
         if (r.indexOf('ok') === 0) {
-          form.reset();
-          mostrar('ok',
-            '<strong>Recebido.</strong> Seu e-mail está na lista de acesso antecipado. ' +
-            'Você recebe uma mensagem quando abrirmos as vagas de piloto em Santa Catarina.');
+          confirmado();
         } else {
           mostrar('erro',
             '<strong>Não conseguimos registrar.</strong> ' +
@@ -1856,38 +1867,21 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
         }
       };
 
-      /* Sinal mais fraco que a mensagem, mas não inútil: se o iframe carregou,
-         o servidor respondeu alguma coisa — o POST saiu daqui e chegou lá. */
-      var carregou = false;
-      var aoCarregar = function () { carregou = true; };
-      vala.addEventListener('load', aoCarregar);
-
+      /* Só sobra amarelo se nem o envio saiu — aí é rede, bloqueador ou o
+         endpoint fora do ar, e o e-mail é a saída honesta. */
       var prazo = setTimeout(function () {
         if (respondeu) return;
         respondeu = true;
         window.removeEventListener('message', aoResponder);
         vala.removeEventListener('load', aoCarregar);
         liberar();
-
-        if (carregou) {
-          /* Três estados, não dois: gravou e avisou; enviou mas não avisou;
-             não saiu daqui. O do meio existe porque a confirmação depende de
-             detalhes do Google que podem mudar sem aviso — e assustar quem
-             cadastrou certo é pior do que admitir a incerteza com calma. */
-          form.reset();
-          mostrar('ok',
-            '<strong>Enviado.</strong> Seu e-mail foi para a nossa lista. ' +
-            'Se por acaso não chegar, ' +
-            '<a href="' + linkDeEmail(email, perfil) + '">escreva pra gente</a>.');
-          return;
-        }
-
         mostrar('alerta',
-          '<strong>Não conseguimos confirmar o envio.</strong> Para garantir, ' +
+          '<strong>Não conseguimos enviar.</strong> Para garantir, ' +
           '<a href="' + linkDeEmail(email, perfil) + '"><strong>clique aqui e nos ' +
           'mande um e-mail</strong></a>.');
       }, ESPERA_MAXIMA);
 
+      vala.addEventListener('load', aoCarregar);
       window.addEventListener('message', aoResponder);
     });
   }

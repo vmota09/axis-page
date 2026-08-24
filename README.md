@@ -88,25 +88,25 @@ O Apps Script não devolve cabeçalho de CORS de forma confiável. Um `fetch()`
 comum é bloqueado pelo navegador; um `fetch` com `mode:'no-cors'` passa, mas
 volta cego. Envio de formulário para um `<iframe>` oculto não passa por CORS.
 
-### Como a página sabe que gravou
+### Os três estados do formulário
 
-O Apps Script responde com um HTML mínimo que avisa a página por
-`postMessage`. **O evento de carga do iframe não serve como confirmação** — foi
-um bug real aqui: com a implantação configurada como "Somente eu", o Google
-devolve um 403, o iframe carrega esse 403 normalmente e dispara o mesmo evento.
-A página dizia "recebido" sem nada ter sido gravado.
+| Sinal | Mensagem | O que se sabe |
+| --- | --- | --- |
+| O script confirma por `postMessage` | **Recebido** | Gravou na planilha. |
+| O iframe responde, sem confirmação | **Enviado** | O envio saiu e o servidor respondeu. Não prova a gravação — e a mensagem não afirma isso. |
+| Nada em 15 segundos | **Não conseguimos enviar** | Rede, bloqueador ou endpoint fora do ar. Oferece o e-mail. |
 
-Agora só a mensagem vinda de dentro do script conta, e ela é checada por
-`evento.source` para não aceitar mensagem de outra origem. Sem resposta em 15
-segundos, a página assume a dúvida em vez de fingir sucesso.
+O estado do meio existe porque a confirmação depende de detalhes internos do
+Apps Script que já falharam de várias formas aqui: acesso da implantação,
+versão servida, e o `postMessage` parando no iframe sandbox que o Google
+embrulha em volta da resposta. Enquanto isso, a gravação sempre funcionou.
 
-Se um dia a planilha parar de receber, o primeiro lugar para olhar é
-**Implantar → Gerenciar implantações → Quem pode acessar**, que precisa estar
-em *Qualquer pessoa*. Um jeito rápido de checar: abrir a URL `/exec` numa aba
-anônima — tem que aparecer o texto do endpoint, não uma tela de login nem 403.
+Fazer a pessoa esperar 15 segundos e depois ver um alerta amarelo — tendo o
+cadastro dado certo — era o pior dos mundos. Agora o retorno vem em ~2
+segundos e o alerta ficou reservado para falha de verdade.
 
-Isso está protegido por teste: trocar o `target` do formulário por um `fetch`,
-ou voltar a confirmar pelo `load` do iframe, quebra a suíte.
+**"Enviado" e "Recebido" são afirmações diferentes de propósito.** Há teste
+que quebra se alguém fundir as duas.
 
 ### Duplicatas e privacidade
 

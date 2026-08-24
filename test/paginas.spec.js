@@ -46,18 +46,21 @@ describe('A página principal', () => {
     expect(indexHtml).toContain('mailto:');
   });
 
-  it('só confirma o cadastro com a mensagem vinda do Apps Script', () => {
-    // O evento de carga do iframe NÃO serve como confirmação: quando a
-    // implantação está com o acesso errado, o Google devolve um 403 e o iframe
-    // carrega esse 403 igual. Confirmar por 'load' faz a página dizer
-    // "recebido" sem nada ter sido gravado — foi um bug real aqui.
-    expect(indexHtml).toContain("addEventListener('message'");
+  it('separa "enviado" de "recebido" e não funde os dois', () => {
+    // Três estados de propósito: o iframe responder prova que o envio saiu
+    // (Enviado); só a mensagem do script prova que gravou (Recebido); nada
+    // dos dois é falha de verdade. Fundir "enviado" em "recebido" volta a
+    // afirmar gravação sem prova — foi um bug real aqui.
+    expect(indexHtml).toContain('<strong>Enviado.</strong>');
+    expect(indexHtml).toContain('<strong>Recebido.</strong>');
+    expect(indexHtml).toContain("vala.addEventListener('load', aoCarregar)");
+    expect(indexHtml).toContain("addEventListener('message', aoResponder)");
+  });
+
+  it('só aceita a confirmação vinda do iframe ou de uma origem do Google', () => {
     expect(indexHtml).toContain("evento.data.axis !== 'cadastro'");
     expect(indexHtml).toContain('evento.source === vala.contentWindow');
-    expect(indexHtml).toContain('googleusercontent');
-    // O 'load' pode existir como sinal fraco, mas nunca pode ser o que
-    // dispara a mensagem de sucesso confirmado.
-    expect(indexHtml).toContain('if (carregou)');
+    expect(indexHtml).toMatch(/google\(usercontent\)\?/);
   });
 
   it('está apontando para um Apps Script publicado', () => {
