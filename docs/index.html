@@ -1748,7 +1748,7 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
      ====================================================================== */
 
   /* --- CONFIGURAÇÃO — cole aqui a URL /exec do Apps Script --- */
-  var URL_PLANILHA = 'https://script.google.com/macros/s/AKfycbzEmXn48l0l0Jc73pJv6xQeQncffY8kq1-WznQx4t5h3JurVDK8LQSDcYOk51U0hDZUEg/exec';
+  var URL_PLANILHA = 'https://script.google.com/macros/s/AKfycbzi0KNHmcUOXKgsdJiJSQvuVmscZqLM42pbs8S71HDclpvDQCZ3zZqx2tSWRbs5Mm-toA/exec';
   var EMAIL_CONTATO = 'axis13042026@gmail.com';
   /* ----------------------------------------------------------- */
 
@@ -1839,6 +1839,7 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
         respondeu = true;
         clearTimeout(prazo);
         window.removeEventListener('message', aoResponder);
+        vala.removeEventListener('load', aoCarregar);
         liberar();
 
         var r = String(evento.data.resultado || '');
@@ -1855,11 +1856,32 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
         }
       };
 
+      /* Sinal mais fraco que a mensagem, mas não inútil: se o iframe carregou,
+         o servidor respondeu alguma coisa — o POST saiu daqui e chegou lá. */
+      var carregou = false;
+      var aoCarregar = function () { carregou = true; };
+      vala.addEventListener('load', aoCarregar);
+
       var prazo = setTimeout(function () {
         if (respondeu) return;
         respondeu = true;
         window.removeEventListener('message', aoResponder);
+        vala.removeEventListener('load', aoCarregar);
         liberar();
+
+        if (carregou) {
+          /* Três estados, não dois: gravou e avisou; enviou mas não avisou;
+             não saiu daqui. O do meio existe porque a confirmação depende de
+             detalhes do Google que podem mudar sem aviso — e assustar quem
+             cadastrou certo é pior do que admitir a incerteza com calma. */
+          form.reset();
+          mostrar('ok',
+            '<strong>Enviado.</strong> Seu e-mail foi para a nossa lista. ' +
+            'Se por acaso não chegar, ' +
+            '<a href="' + linkDeEmail(email, perfil) + '">escreva pra gente</a>.');
+          return;
+        }
+
         mostrar('alerta',
           '<strong>Não conseguimos confirmar o envio.</strong> Para garantir, ' +
           '<a href="' + linkDeEmail(email, perfil) + '"><strong>clique aqui e nos ' +

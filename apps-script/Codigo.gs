@@ -125,13 +125,22 @@ function doGet() {
  *
  * ALLOWALL é obrigatório: sem ele o Google recusa ser exibido dentro de um
  * iframe de outro site, e a resposta nunca chega.
+ *
+ * O aviso vai para `top` E para `parent`: o Google embrulha este HTML num
+ * iframe sandbox dele, então `parent` sozinho para no embrulho e nunca alcança
+ * a página que abriu o formulário.
  */
 function resposta_(texto) {
   var seguro = String(texto).replace(/[\\'"<>]/g, '');
   var html =
     '<!doctype html><meta charset="utf-8"><title>AXIS</title>' +
     '<script>' +
-    'try{parent.postMessage({axis:"cadastro",resultado:"' + seguro + '"},"*")}catch(e){}' +
+    'var m={axis:"cadastro",resultado:"' + seguro + '"};' +
+    // O HtmlService serve este HTML dentro de um iframe sandbox próprio do
+    // Google. Ou seja: `parent` é esse iframe intermediário, não a página do
+    // AXIS — foi por isso que a confirmação nunca chegava. `top` atravessa.
+    'try{top.postMessage(m,"*")}catch(e){}' +
+    'try{parent.postMessage(m,"*")}catch(e){}' +
     '<\/script>' +
     '<p>' + seguro + '</p>';
   return HtmlService.createHtmlOutput(html)

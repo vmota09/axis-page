@@ -55,7 +55,9 @@ describe('A página principal', () => {
     expect(indexHtml).toContain("evento.data.axis !== 'cadastro'");
     expect(indexHtml).toContain('evento.source === vala.contentWindow');
     expect(indexHtml).toContain('googleusercontent');
-    expect(indexHtml).not.toContain("vala.addEventListener('load'");
+    // O 'load' pode existir como sinal fraco, mas nunca pode ser o que
+    // dispara a mensagem de sucesso confirmado.
+    expect(indexHtml).toContain('if (carregou)');
   });
 
   it('está apontando para um Apps Script publicado', () => {
