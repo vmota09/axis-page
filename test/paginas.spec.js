@@ -1,5 +1,5 @@
 /**
- * Guardas sobre o conteúdo das duas páginas.
+ * Guardas sobre o conteúdo das duas páginas publicadas em `docs/`.
  *
  * Rodam no Node comum, não no workerd: aqui o que se testa é o HTML como
  * arquivo, e o runtime da Cloudflare não tem acesso ao disco.
@@ -15,30 +15,51 @@ import { dirname, join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 
 const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
-const ler = (arquivo) => readFileSync(join(raiz, 'public', arquivo), 'utf-8');
+const ler = (arquivo) => readFileSync(join(raiz, 'docs', arquivo), 'utf-8');
 
 const indexHtml = ler('index.html');
 const laudoHtml = ler('laudo-exemplo.html');
 
 describe('A página principal', () => {
-  it('mantém o formulário ligado na rota de cadastro', () => {
+  it('tem o formulário de cadastro apontando para o iframe oculto', () => {
+    // O `target` é o que evita o CORS do Apps Script. Trocar por um fetch()
+    // faz o envio voltar a ser bloqueado pelo navegador — sem erro visível.
     expect(indexHtml).toContain('id="formLead"');
-    expect(indexHtml).toContain('/api/leads');
-  });
-
-  it('usa um e-mail de contato real no plano B, não o marcador', () => {
-    expect(indexHtml).toContain('axis13042026@gmail.com');
-    expect(indexHtml).not.toContain('contato@axis.tech');
+    expect(indexHtml).toContain('target="axis_vala"');
+    expect(indexHtml).toContain('name="axis_vala"');
   });
 
   it('mantém o campo-armadilha contra robô', () => {
     expect(indexHtml).toContain('id="leadEmpresa"');
   });
 
-  it('não deixa o modo prévia ligado por engano na versão publicada', () => {
-    // O modo prévia desliga o POST. Ligado sem querer no deploy real, o
-    // formulário para de gravar e ninguém percebe — a página continua igual.
-    expect(indexHtml).not.toContain('AXIS_MODO_PREVIA = true');
+  it('manda os três campos que a planilha espera', () => {
+    for (const campo of ['name="email"', 'name="perfil"', 'name="origem"']) {
+      expect(indexHtml).toContain(campo);
+    }
+  });
+
+  it('não promete gravação quando o endereço da planilha está vazio', () => {
+    // Sem destino configurado, o formulário precisa cair no e-mail — nunca
+    // dizer "recebido" sem ter enviado para lugar nenhum.
+    expect(indexHtml).toContain('if (!URL_PLANILHA)');
+    expect(indexHtml).toContain('mailto:');
+  });
+
+  it('está apontando para um Apps Script publicado', () => {
+    // Um /dev no lugar de /exec é o erro clássico: funciona para quem está
+    // logado como dona do script e falha calado para todo mundo.
+    expect(indexHtml).toMatch(/URL_PLANILHA = 'https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec'/);
+  });
+
+  it('o endereço de contato é real', () => {
+    expect(indexHtml).toContain('axis13042026@gmail.com');
+    expect(indexHtml).not.toContain('contato@axis.tech');
+  });
+
+  it('todo botão de conversão leva à seção de cadastro', () => {
+    expect(indexHtml).not.toContain('#acesso"');
+    expect(indexHtml).toContain('id="contato"');
   });
 
   it('leva o visitante ao laudo de demonstração', () => {

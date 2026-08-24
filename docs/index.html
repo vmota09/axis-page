@@ -531,9 +531,9 @@ table.laudo-tab .med,table.laudo-tab .lim{font-family:var(--mono);font-size:.8re
 .captura::before{content:"";position:absolute;inset:0;
   background:radial-gradient(700px 340px at 50% -8%,rgba(34,211,238,.16),transparent 66%)}
 .captura .wrap{position:relative;z-index:1}
-.form{max-width:560px;margin:36px auto 0}
+.form{max-width:560px;margin:34px auto 0}
 .form-linha{display:flex;gap:12px}
-.form input[type=email],.form input[type=text]{
+.form input[type=email]{
   flex:1;padding:15px 18px;font-size:1rem;border-radius:11px;
   border:1px solid var(--borda-forte);background:rgba(255,255,255,.05);color:var(--texto);
   font-family:inherit;transition:.2s;min-width:0;
@@ -542,10 +542,10 @@ table.laudo-tab .med,table.laudo-tab .lim{font-family:var(--mono);font-size:.8re
 .form input:focus{outline:0;border-color:var(--ciano);background:rgba(34,211,238,.07);
   box-shadow:0 0 0 4px rgba(34,211,238,.12)}
 .form .perfil{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+/* Fora do fluxo de verdade (não só invisível): com `opacity:0` sozinho o radio
+   continua ocupando espaço e engole o clique do rótulo ao lado. */
 .perfil input{position:absolute;width:1px;height:1px;margin:-1px;padding:0;
   overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
-/* Fora do fluxo de verdade (não só invisível): com `opacity:0` sozinho o
-   radio continua ocupando espaço e engole o clique do rótulo ao lado. */
 .perfil input:focus-visible+label{outline:2px solid var(--ciano);outline-offset:2px}
 .perfil label{
   padding:8px 15px;border:1px solid var(--borda);border-radius:999px;font-size:.83rem;
@@ -563,6 +563,9 @@ table.laudo-tab .med,table.laudo-tab .lim{font-family:var(--mono);font-size:.8re
 .form-msg.alerta{background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.32);color:#fde68a}
 .form-msg a{color:inherit}
 .form button[type=submit]{flex-shrink:0}
+.vala{display:none}
+.contato-ou{margin-top:26px;font-size:.85rem;color:var(--texto-3)}
+.contato-ou a{color:var(--texto-2)}
 
 /* ---------- rodapé ---------- */
 footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--grafite)}
@@ -620,10 +623,6 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
   .reveal{opacity:1;transform:none}
 }
 </style>
-<!-- Versão estática: sem servidor atrás. O formulário abre o e-mail
-     preenchido em vez de tentar gravar. Ao publicar o Worker, use a
-     pasta public/ no lugar desta. -->
-<script>window.AXIS_MODO_PREVIA = true;</script>
 </head>
 <body>
 
@@ -644,7 +643,7 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
       <a href="#laudo">O laudo</a>
       <a href="#resumos">Resumos</a>
       <a href="#planos">Planos</a>
-      <a href="#acesso" class="btn btn-cta btn-p">Quero acesso antecipado</a>
+      <a href="#contato" class="btn btn-cta btn-p">Quero acesso antecipado</a>
     </div>
   </div>
 </nav>
@@ -662,7 +661,7 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
           Pré-diagnóstico pronto para o arquiteto ou engenheiro revisar e assinar.
         </p>
         <div class="btns">
-          <a href="#acesso" class="btn btn-cta">
+          <a href="#contato" class="btn btn-cta">
             Quero acesso antecipado
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
@@ -1276,7 +1275,7 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
           <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Inclinômetro por sensor e cálculo de LRV</li>
           <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Canal direto com quem constrói o produto</li>
         </ul>
-        <a href="#acesso" class="btn btn-linha">Entrar no piloto</a>
+        <a href="#contato" class="btn btn-linha">Entrar no piloto</a>
       </div>
 
       <div class="plano destaque reveal">
@@ -1292,7 +1291,7 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
           <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Plano de ação com faixa de custo estimada</li>
           <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Exportação completa dos dados, sempre</li>
         </ul>
-        <a href="#acesso" class="btn btn-cta">Quero ser avisado do lançamento</a>
+        <a href="#contato" class="btn btn-cta">Quero ser avisado do lançamento</a>
       </div>
 
       <div class="plano reveal">
@@ -1307,7 +1306,7 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
           <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>API pública para integrar ao fluxo de alvará</li>
           <li><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>Pré-checagem antes da vistoria de Habite-se</li>
         </ul>
-        <a href="#acesso" class="btn btn-linha">Falar sobre um piloto</a>
+        <a href="#contato" class="btn btn-linha">Falar sobre um piloto</a>
       </div>
     </div>
 
@@ -1381,8 +1380,8 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
   </div>
 </section>
 
-<!-- ==================== CAPTURA DE E-MAIL ==================== -->
-<section class="secao captura" id="acesso">
+<!-- ==================== CADASTRO ==================== -->
+<section class="secao captura" id="contato">
   <div class="wrap centro">
     <span class="rotulo reveal">Acesso antecipado</span>
     <h2 class="reveal">Deixe seu e-mail.<br>A gente avisa quando abrir.</h2>
@@ -1391,11 +1390,16 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
       Sem spam, sem newsletter — um e-mail quando houver o que mostrar.
     </p>
 
-    <form class="form reveal" id="formLead" novalidate>
+    <!-- O envio vai para um iframe oculto, e não por fetch(): assim não passa
+         por CORS, que o Apps Script não trata de forma confiável. A página
+         escuta o carregamento do iframe para saber que o envio terminou. -->
+    <form class="form reveal" id="formLead" method="POST" target="axis_vala" novalidate>
+      <input type="hidden" name="origem" value="landing-page">
+
       <div class="form-linha">
         <input type="email" id="leadEmail" name="email" placeholder="seu@email.com.br"
                autocomplete="email" required aria-label="Seu e-mail">
-        <button type="submit" class="btn btn-cta" id="leadBtn">Quero acesso antecipado</button>
+        <button type="submit" class="btn btn-cta" id="leadBtn">Entrar na lista</button>
       </div>
 
       <!-- Campo-armadilha: humano não preenche o que não vê. Bloqueia robô de -->
@@ -1420,10 +1424,16 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
 
       <p class="lgpd">
         Guardamos apenas o e-mail, o perfil e a data, para avisar sobre o lançamento do AXIS.
-        Não compartilhamos com ninguém. Responda a qualquer mensagem pedindo remoção e o
-        registro é apagado.
+        Não compartilhamos com ninguém. Peça a remoção por e-mail e o registro é apagado.
       </p>
     </form>
+
+    <iframe name="axis_vala" id="axisVala" class="vala" title="Destino do envio do formulário"></iframe>
+
+    <p class="contato-ou reveal">
+      Prefere falar direto?
+      <a href="mailto:axis13042026@gmail.com?subject=Interesse%20no%20AXIS">axis13042026@gmail.com</a>
+    </p>
   </div>
 </section>
 
@@ -1720,144 +1730,122 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
     if (e.key === 'Escape' && modal.classList.contains('on')) fecharModal();
   });
 
+
   /* ======================================================================
-     CAPTURA DE E-MAIL
+     CADASTRO NA LISTA DE ESPERA
      ----------------------------------------------------------------------
-     Dois caminhos, nesta ordem:
-     1. POST no backend do próprio AXIS (/api/leads) — é lá que o e-mail é
-        gravado de verdade, no mesmo banco das auditorias.
-     2. Se o servidor não responder, o e-mail fica guardado no navegador e
-        reenviado na próxima visita, e a pessoa recebe um link de e-mail
-        direto. Num pitch, o formulário não pode falhar em silêncio.
+     Destino: uma planilha do Google, via Apps Script (ver apps-script/Codigo.gs).
+
+     O envio é um POST de formulário comum, direcionado a um iframe oculto —
+     e não um fetch(). Motivo: o Apps Script não devolve cabeçalho de CORS de
+     forma confiável. Um fetch normal é bloqueado pelo navegador; um fetch com
+     mode:'no-cors' passa, mas volta cego, e a página não teria como saber se
+     gravou. Envio de formulário não passa por CORS, e o evento de carga do
+     iframe diz que o servidor respondeu.
+
+     Enquanto URL_PLANILHA estiver vazia, o formulário não finge que grava:
+     abre o e-mail já preenchido, que funciona sem servidor nenhum.
      ====================================================================== */
 
-  /* --- CONFIGURAÇÃO — os dois valores que você troca ao publicar --- */
-  var API_BASE = window.AXIS_API_BASE || '';   /* ex.: 'https://axis.onrender.com' */
-  var MODO_PREVIA = window.AXIS_MODO_PREVIA === true;  /* página sem Worker atrás */
-  var EMAIL_CONTATO = 'axis13042026@gmail.com'; /* caixa que recebe o fallback */
-  /* ----------------------------------------------------------------- */
+  /* --- CONFIGURAÇÃO — cole aqui a URL /exec do Apps Script --- */
+  var URL_PLANILHA = 'https://script.google.com/macros/s/AKfycbxBG5eLe1BekoUKuUstP2Rf-FnGRXCf8S1NWeGLVMom67PzUZugGFkka572PN--SeDRwA/exec';
+  var EMAIL_CONTATO = 'axis13042026@gmail.com';
+  /* ----------------------------------------------------------- */
 
-  var CHAVE = 'axis_leads_pendentes';
-  var form = $('#formLead'), campo = $('#leadEmail'), botao = $('#leadBtn'), msg = $('#leadMsg');
+  var ESPERA_MAXIMA = 15000;   /* ms até desistir e oferecer o e-mail */
 
-  function mostrar(tipo, html) {
-    msg.className = 'form-msg on ' + tipo;
-    msg.innerHTML = html;
-  }
+  var form = $('#formLead'), campo = $('#leadEmail'), botao = $('#leadBtn'),
+      msg = $('#leadMsg'), vala = $('#axisVala');
 
-  function valido(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
-  }
+  if (form) {
+    if (URL_PLANILHA) form.action = URL_PLANILHA;
 
-  function pendentes() {
-    try { return JSON.parse(localStorage.getItem(CHAVE) || '[]'); }
-    catch (e) { return []; }
-  }
-  function guardar(lead) {
-    try {
-      var fila = pendentes();
-      fila.push(lead);
-      localStorage.setItem(CHAVE, JSON.stringify(fila));
-      return true;
-    } catch (e) { return false; }   /* modo privado, cota cheia: não é fatal */
-  }
-
-  function linkDeEmail(lead) {
-    var assunto = encodeURIComponent('Acesso antecipado ao AXIS');
-    var corpo = encodeURIComponent(
-      'Quero entrar na lista de acesso antecipado do AXIS.\n\n' +
-      'E-mail: ' + lead.email + '\nPerfil: ' + lead.perfil + '\n');
-    return 'mailto:' + EMAIL_CONTATO + '?subject=' + assunto + '&body=' + corpo;
-  }
-
-  function enviar(lead) {
-    if (MODO_PREVIA) return Promise.reject(new Error('modo prévia'));
-    return fetch(API_BASE + '/api/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(lead)
-    }).then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    });
-  }
-
-  /* Reenvia o que ficou preso da última visita. Silencioso: se falhar de
-     novo, continua na fila — não vale incomodar quem só voltou ao site. */
-  function drenarFila() {
-    if (MODO_PREVIA) return;
-    var fila = pendentes();
-    if (!fila.length) return;
-    var restantes = [];
-    var tentativas = fila.map(function (lead) {
-      return enviar(lead).catch(function () { restantes.push(lead); });
-    });
-    Promise.all(tentativas).then(function () {
-      try { localStorage.setItem(CHAVE, JSON.stringify(restantes)); } catch (e) {}
-    });
-  }
-  drenarFila();
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    /* Campo-armadilha preenchido = robô. Fingimos sucesso e não gravamos. */
-    if ($('#leadEmpresa').value) {
-      mostrar('ok', '<strong>Pronto!</strong> Recebemos seu e-mail.');
-      return;
-    }
-
-    var email = campo.value.trim().toLowerCase();
-    if (!valido(email)) {
-      mostrar('erro', 'Esse e-mail não parece válido. Confira e tente de novo.');
-      campo.focus();
-      return;
-    }
-
-    var perfilMarcado = $('input[name="perfil"]:checked');
-    var lead = {
-      email: email,
-      perfil: perfilMarcado ? perfilMarcado.value : 'outro',
-      origem: 'landing-page',
-      criado_em: new Date().toISOString()
+    var mostrar = function (tipo, html) {
+      msg.className = 'form-msg on ' + tipo;
+      msg.innerHTML = html;
     };
 
-    botao.disabled = true;
-    botao.textContent = 'Enviando…';
+    var valido = function (email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    };
 
-    enviar(lead)
-      .then(function () {
+    var linkDeEmail = function (email, perfil) {
+      var assunto = encodeURIComponent('Acesso antecipado ao AXIS');
+      var corpo = encodeURIComponent(
+        'Quero entrar na lista de acesso antecipado do AXIS.\n\n' +
+        'E-mail: ' + email + '\nPerfil: ' + perfil + '\n');
+      return 'mailto:' + EMAIL_CONTATO + '?subject=' + assunto + '&body=' + corpo;
+    };
+
+    var liberar = function () {
+      botao.disabled = false;
+      botao.textContent = 'Entrar na lista';
+    };
+
+    form.addEventListener('submit', function (e) {
+      /* Campo-armadilha preenchido = robô. Fingimos sucesso e não enviamos. */
+      if ($('#leadEmpresa').value) {
+        e.preventDefault();
+        mostrar('ok', '<strong>Pronto!</strong> Recebemos seu e-mail.');
+        return;
+      }
+
+      var email = campo.value.trim().toLowerCase();
+      if (!valido(email)) {
+        e.preventDefault();
+        mostrar('erro', 'Esse e-mail não parece válido. Confira e tente de novo.');
+        campo.focus();
+        return;
+      }
+
+      var marcado = $('input[name="perfil"]:checked');
+      var perfil = marcado ? marcado.value : 'outro';
+
+      if (!URL_PLANILHA) {
+        e.preventDefault();
+        mostrar('ok',
+          '<strong>Falta um clique.</strong> O cadastro automático ainda não está ' +
+          'ligado. <a href="' + linkDeEmail(email, perfil) + '"><strong>Clique aqui ' +
+          'para abrir o e-mail já preenchido</strong></a> e é só enviar — a gente ' +
+          'recebe do mesmo jeito.');
+        return;
+      }
+
+      /* Daqui em diante o navegador envia o formulário de verdade, para o
+         iframe. Só cuidamos do que a pessoa vê enquanto isso. */
+      botao.disabled = true;
+      botao.textContent = 'Enviando…';
+      msg.className = 'form-msg';
+
+      var respondeu = false;
+
+      var aoCarregar = function () {
+        if (respondeu) return;
+        respondeu = true;
+        clearTimeout(prazo);
+        vala.removeEventListener('load', aoCarregar);
         form.reset();
+        liberar();
         mostrar('ok',
           '<strong>Recebido.</strong> Seu e-mail está na lista de acesso antecipado. ' +
           'Você recebe uma mensagem quando abrirmos as vagas de piloto em Santa Catarina.');
-      })
-      .catch(function () {
-        var salvou = guardar(lead);
-        var mailto = linkDeEmail(lead);
+      };
 
-        if (MODO_PREVIA) {
-          form.reset();
-          mostrar('ok',
-            '<strong>Falta um clique.</strong> Esta é a versão de demonstração da ' +
-            'página, sem servidor atrás. ' +
-            '<a href="' + mailto + '"><strong>Clique aqui para abrir o e-mail já ' +
-            'preenchido</strong></a> e é só enviar — a gente recebe do mesmo jeito.');
-          return;
-        }
-
+      var prazo = setTimeout(function () {
+        if (respondeu) return;
+        respondeu = true;
+        vala.removeEventListener('load', aoCarregar);
+        liberar();
         mostrar('alerta',
-          '<strong>Anotamos aqui no seu navegador.</strong> ' +
-          'Nosso servidor não respondeu agora' +
-          (salvou ? ', então guardamos seu e-mail e reenviamos automaticamente na sua próxima visita. ' : '. ') +
-          'Se preferir garantir agora, <a href="' + mailto +
-          '"><strong>clique aqui para nos mandar um e-mail</strong></a>.');
-      })
-      .then(function () {
-        botao.disabled = false;
-        botao.textContent = 'Quero acesso antecipado';
-      });
-  });
+          '<strong>Não conseguimos confirmar o envio.</strong> Pode ter gravado, ' +
+          'mas não dá para ter certeza. Para garantir, ' +
+          '<a href="' + linkDeEmail(email, perfil) + '"><strong>clique aqui e nos ' +
+          'mande um e-mail</strong></a>.');
+      }, ESPERA_MAXIMA);
+
+      vala.addEventListener('load', aoCarregar);
+    });
+  }
 
   /* Ano do rodapé sempre correto, sem precisar editar o HTML. */
   var fim = $('.rod-fim span');

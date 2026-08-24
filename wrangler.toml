@@ -9,7 +9,7 @@ compatibility_date = "2025-10-11"
 # Os arquivos estáticos. A Cloudflare devolve direto do CDN, sem invocar o
 # Worker e sem consumir a cota de requisições — só as rotas /api/ custam algo.
 [assets]
-directory = "./public"
+directory = "./docs"
 binding = "ASSETS"
 
 # Banco dos e-mails captados.

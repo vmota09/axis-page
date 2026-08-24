@@ -1,7 +1,6 @@
 # AXIS — landing page
 
-Página pública de promoção do AXIS, com captura de e-mail para a lista de
-acesso antecipado.
+Página pública de promoção do AXIS. Site estático, sem servidor.
 
 Projeto separado do repositório do produto de propósito: a página muda de
 endereço, vai ao ar antes do produto e pode cair sem afetar ninguém em campo.
@@ -16,16 +15,11 @@ a raiz aqui é ocupada pelo projeto.
 Configuração no GitHub, uma vez só:
 **Settings → Pages → Source: Deploy from a branch → Branch: `main` / `/docs`.**
 
-Endereço: `https://vmota09.github.io/axis-page/`
+Endereço: <https://vmota09.github.io/axis-page/>
 
-Nessa versão o formulário não grava e-mail: ele abre o e-mail já preenchido
-para o visitante enviar. É `docs/`, e não `public/`, justamente por isso — a
-diferença entre as duas é uma linha (`AXIS_MODO_PREVIA`).
-
-Depois de mexer em `public/index.html`, regenere e publique:
+Publicar uma alteração:
 
 ```bash
-npm run site        # regenera docs/ a partir de public/
 git add docs && git commit -m "atualiza a página" && git push
 ```
 
@@ -39,23 +33,25 @@ lida por estranhos, repositório público é o caminho natural.
 Alternativas de host, se um dia quiser sair do GitHub: **app.netlify.com/drop**
 ou **cloudflare.com/drop** aceitam a pasta `docs/` arrastada, sem terminal.
 
-Quando o Worker estiver publicado, o endereço definitivo passa a servir
-`public/`, e aí o cadastro grava sozinho. Ver [DEPLOY.md](DEPLOY.md).
-
 ## Arquivos
 
 ```
-docs/                      O que o GitHub Pages publica (sem servidor).
-public/index.html          A página inteira — HTML, CSS e JS num arquivo só.
-public/laudo-exemplo.html  Laudo de demonstração, com dados fictícios.
-worker/index.js            Serve os estáticos e grava os e-mails no D1.
-test/                      31 testes — Worker no runtime da Cloudflare, e o conteúdo das páginas.
-schema.sql                 Tabelas do banco de leads.
-wrangler.toml              Configuração do deploy.
-DEPLOY.md                  Passo a passo para colocar no ar.
+docs/index.html          A página inteira — HTML, CSS e JS num arquivo só.
+docs/laudo-exemplo.html  Laudo de demonstração, com dados fictícios.
+test/paginas.spec.js     Guardas sobre o conteúdo das páginas.
+apps-script/Codigo.gs    Recebe os cadastros e grava na planilha do Google.
+marca/                   QR code do link público.
 ```
 
-**Para publicar, siga o [DEPLOY.md](DEPLOY.md).**
+E, guardado para quando houver captação de e-mail (ver abaixo):
+
+```
+worker/index.js       Endpoint de cadastro, pronto e testado.
+test/leads.spec.js    23 testes do endpoint.
+schema.sql            Tabelas do banco.
+wrangler.toml         Configuração do deploy.
+DEPLOY.md             Passo a passo.
+```
 
 Sem build step, sem bundler, sem framework de front — mesma decisão do app:
 precisa abrir numa URL e funcionar. O símbolo da marca está embutido como
@@ -63,12 +59,59 @@ precisa abrir numa URL e funcionar. O símbolo da marca está embutido como
 fontes IBM Plex (que caem para a fonte do sistema se o Google Fonts não
 responder).
 
+## Rodar e testar
+
+```bash
+npm install
+npm test                 # 33 testes
+```
+
+Para ver a página, basta abrir `docs/index.html` no navegador. Nada a compilar.
+
+## A captação de e-mail — Google Sheets
+
+Os cadastros caem na planilha **"AXIS — lista de espera (landing page)"**, no
+seu Drive, via um Apps Script publicado como aplicativo da web.
+
+Instalar (uma vez, tudo no navegador): as instruções estão no topo de
+[`apps-script/Codigo.gs`](apps-script/Codigo.gs). No fim você recebe uma URL
+terminada em `/exec` — cole-a em `docs/index.html`, na constante
+`URL_PLANILHA`, e publique.
+
+**Enquanto essa constante estiver vazia, o formulário não finge que grava.**
+Ele abre o e-mail já preenchido para o visitante enviar. Um campo que parece
+funcionar e some é pior que um que assume a limitação.
+
+### Por que o envio é um formulário, e não `fetch()`
+
+O Apps Script não devolve cabeçalho de CORS de forma confiável. Um `fetch()`
+comum é bloqueado pelo navegador; um `fetch` com `mode:'no-cors'` passa, mas
+volta cego — a página não teria como saber se gravou, e diria "recebido" no
+escuro. Envio de formulário para um `<iframe>` oculto não passa por CORS, e o
+evento de carga do iframe confirma que o servidor respondeu. Se em 15 segundos
+não responder, a página assume a dúvida e oferece o e-mail.
+
+Isso está protegido por teste: trocar o `target` do formulário por um `fetch`
+quebra a suíte.
+
+### Duplicatas e privacidade
+
+O mesmo e-mail enviado duas vezes não vira linha nova: o script atualiza o
+perfil e soma no contador `envios`. A planilha guarda data, e-mail, perfil,
+origem e contagem — nada além disso, e nenhum IP.
+
+### Alternativa mais robusta, para depois
+
+`worker/index.js` (Cloudflare Worker + D1) faz o mesmo com banco próprio,
+exportação em CSV, freio contra robô por IP e listagem trancada por token.
+Está escrito e coberto por 23 testes; falta publicar. Ver [DEPLOY.md](DEPLOY.md).
+
 ## O laudo de demonstração
 
-`laudo-exemplo.html` não foi escrito à mão. Ele saiu do motor de regras real do
-AXIS (`app/rules.py` + `app/report.py`), rodado sobre um conjunto de medições
-inventadas de uma "Escola Municipal Exemplo". Formato, códigos de item,
-referências normativas, índice ponderado e plano de ação priorizado são
+`docs/laudo-exemplo.html` não foi escrito à mão. Ele saiu do motor de regras
+real do AXIS (`app/rules.py` + `app/report.py`), rodado sobre um conjunto de
+medições inventadas de uma "Escola Municipal Exemplo". Formato, códigos de
+item, referências normativas, índice ponderado e plano de ação priorizado são
 exatamente o que o produto emite — só os números de entrada é que são fictícios.
 
 Resultado: **63,8% · parcialmente conforme**, 8 de 15 critérios avaliados
@@ -82,98 +125,7 @@ Há um teste que quebra se a marcação sumir.
 
 Para gerar de novo com outros valores, rode a partir da pasta do repositório do
 produto, onde estão `app/rules.py` e `app/report.py`, e salve a saída em
-`public/laudo-exemplo.html`.
-
-## Rodar
-
-```bash
-npm install
-cp .dev.vars.exemplo .dev.vars   # e edite os dois valores
-npm run banco:local              # cria as tabelas no D1 local
-npm run dev                      # abre em http://localhost:8787
-npm test                         # 23 testes
-```
-
-Os testes rodam dentro do workerd — o mesmo runtime que a Cloudflare executa em
-produção — com um D1 local de verdade. Não é mock do banco.
-
-## Onde os e-mails são gravados
-
-`POST /api/leads` grava no Cloudflare D1 (SQLite gerenciado, replicado). O
-banco é seu: sai inteiro em CSV a qualquer momento, sem depender de painel de
-terceiro.
-
-O mesmo e-mail enviado duas vezes não vira linha duplicada: atualiza o perfil
-e conta o reenvio. Isso importa porque a página tem fila offline — se o
-servidor não responder, o e-mail fica guardado no navegador do visitante e é
-reenviado sozinho na visita seguinte.
-
-### Ver e exportar a lista
-
-A listagem **só** funciona com token. Sem `AXIS_ADMIN_TOKEN` definido,
-ninguém lista — inclusive você. É proposital: deixar a lista de e-mails aberta
-por esquecimento é vazamento de dado pessoal.
-
-```bash
-curl "https://SUA-URL/api/leads?token=SEU_TOKEN"
-curl -O "https://SUA-URL/api/leads/exportar.csv?token=SEU_TOKEN"
-```
-
-O token é um secret na Cloudflare, definido com
-`npx wrangler secret put AXIS_ADMIN_TOKEN`. A comparação é feita em tempo
-constante, para que um atacante não descubra o token medindo o tempo de
-resposta.
-
-O CSV sai com `;` e BOM — abre direto no Excel em português, com acentuação
-correta.
-
-Para apagar um cadastro (a página promete isso ao visitante, é o direito de
-exclusão da LGPD):
-
-```bash
-curl -X DELETE "https://SUA-URL/api/leads/pessoa@exemplo.com.br?token=SEU_TOKEN"
-```
-
-### Variáveis de ambiente
-
-| Secret | Para quê | Sem ele |
-| --- | --- | --- |
-| `AXIS_ADMIN_TOKEN` | Libera listagem, CSV e exclusão | Tudo trancado, inclusive para você |
-| `AXIS_SAL` | Embaralha o hash do IP no freio contra robô | Usa um valor padrão; o hash continua irreversível |
-
-O IP do visitante nunca é gravado — só um hash truncado, e só para contar
-cadastros na última hora.
-
-## Antes de publicar — três coisas para trocar
-
-1. **E-mail de contato.** No fim do `public/index.html`, `EMAIL_CONTATO` está como
-   `contato@axis.tech`. É a caixa que recebe o fallback quando o servidor não
-   responde. Se esse endereço ainda não existe, troque por um que exista —
-   senão o plano B não leva a lugar nenhum.
-
-2. **Endereço da API**, só se a página for publicada separada do Worker. No
-   deploy descrito no DEPLOY.md, página e API vivem no mesmo domínio — não
-   mexa em nada, o padrão é caminho relativo. Se um dia separar, adicione antes
-   do `<script>` final:
-
-   ```html
-   <script>window.AXIS_API_BASE = 'https://seu-worker.exemplo.com';</script>
-   ```
-
-3. **Os números com ressalva.** A seção de planos e os textos dos resumos
-   trazem preços marcados como estimativa não validada, e a seção de validação
-   marca o que é relato profissional e o que é inferência. Isso é intencional —
-   é o que sustenta o argumento diante de uma banca técnica. Se algum desses
-   dados for validado depois, atualize o texto junto.
-
-## Publicar
-
-```bash
-npm run deploy
-```
-
-Passo a passo completo, incluindo a primeira configuração da conta, em
-[DEPLOY.md](DEPLOY.md).
+`docs/laudo-exemplo.html`.
 
 ## O que a página tem
 
@@ -193,8 +145,14 @@ Passo a passo completo, incluindo a primeira configuração da conta, em
   validação.
 - **Planos** (âncora `#planos`), com o aviso de que nenhum preço foi validado.
 - **FAQ** com as perguntas que uma banca técnica faria.
-- **Captura de e-mail** com perfil do visitante, fila offline e link de e-mail
-  como plano B.
+- **Cadastro** na lista de espera, gravando na planilha do Google.
+
+## Cuidado ao editar
+
+Os números com ressalva são intencionais. A seção de planos marca os preços
+como estimativa não validada, e a seção de validação separa o que é relato
+profissional do que é inferência. É isso que sustenta o argumento diante de uma
+banca técnica — não apague sem trocar por dado real.
 
 Acessibilidade — que num produto de acessibilidade não é detalhe: navegação
 por teclado nos modais e no FAQ, foco visível, `prefers-reduced-motion`
