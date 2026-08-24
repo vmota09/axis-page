@@ -19,9 +19,15 @@
  * -------------------------------------------------------
  * O Apps Script não devolve cabeçalho de CORS de forma confiável, então um
  * fetch() comum é bloqueado pelo navegador e um fetch com mode:'no-cors' volta
- * cego — impossível saber se gravou. Envio de formulário não passa por CORS,
- * e a página escuta o carregamento do iframe oculto para saber que terminou.
- * É técnica antiga, mas é a que não depende de nada fora do nosso controle.
+ * cego — impossível saber se gravou. Envio de formulário não passa por CORS.
+ *
+ * COMO A PÁGINA SABE QUE GRAVOU
+ * -----------------------------
+ * A resposta é um HTML minúsculo que avisa a página por postMessage. Não basta
+ * escutar o carregamento do iframe: quando a implantação está com o acesso
+ * errado, o Google devolve um 403 — e o iframe carrega esse 403 normalmente,
+ * disparando o mesmo evento. A página diria "recebido" sem nada ter sido
+ * gravado. Só a mensagem daqui de dentro prova que este código rodou.
  */
 
 var ABA = 'leads';
@@ -114,7 +120,20 @@ function doGet() {
   return resposta_('AXIS — endpoint de cadastro. Use POST.');
 }
 
+/**
+ * Responde com um HTML que avisa a página que abriu o iframe.
+ *
+ * ALLOWALL é obrigatório: sem ele o Google recusa ser exibido dentro de um
+ * iframe de outro site, e a resposta nunca chega.
+ */
 function resposta_(texto) {
-  return ContentService.createTextOutput(texto)
-    .setMimeType(ContentService.MimeType.TEXT);
+  var seguro = String(texto).replace(/[\\'"<>]/g, '');
+  var html =
+    '<!doctype html><meta charset="utf-8"><title>AXIS</title>' +
+    '<script>' +
+    'try{parent.postMessage({axis:"cadastro",resultado:"' + seguro + '"},"*")}catch(e){}' +
+    '<\/script>' +
+    '<p>' + seguro + '</p>';
+  return HtmlService.createHtmlOutput(html)
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }

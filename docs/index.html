@@ -1819,31 +1819,47 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
 
       var respondeu = false;
 
-      var aoCarregar = function () {
+      /* Só a mensagem vinda de dentro do Apps Script prova que ele rodou.
+         Escutar apenas o carregamento do iframe não serve: quando a implantação
+         está com o acesso errado, o Google devolve um 403 e o iframe carrega
+         esse 403 igual, disparando o mesmo evento. A página diria "recebido"
+         sem nada ter sido gravado. */
+      var aoResponder = function (evento) {
         if (respondeu) return;
+        if (!evento.data || evento.data.axis !== 'cadastro') return;
+        if (evento.source !== vala.contentWindow) return;
+
         respondeu = true;
         clearTimeout(prazo);
-        vala.removeEventListener('load', aoCarregar);
-        form.reset();
+        window.removeEventListener('message', aoResponder);
         liberar();
-        mostrar('ok',
-          '<strong>Recebido.</strong> Seu e-mail está na lista de acesso antecipado. ' +
-          'Você recebe uma mensagem quando abrirmos as vagas de piloto em Santa Catarina.');
+
+        var r = String(evento.data.resultado || '');
+        if (r.indexOf('ok') === 0) {
+          form.reset();
+          mostrar('ok',
+            '<strong>Recebido.</strong> Seu e-mail está na lista de acesso antecipado. ' +
+            'Você recebe uma mensagem quando abrirmos as vagas de piloto em Santa Catarina.');
+        } else {
+          mostrar('erro',
+            '<strong>Não conseguimos registrar.</strong> ' +
+            '<a href="' + linkDeEmail(email, perfil) + '"><strong>Clique aqui e nos ' +
+            'mande um e-mail</strong></a> que a gente cadastra na mão.');
+        }
       };
 
       var prazo = setTimeout(function () {
         if (respondeu) return;
         respondeu = true;
-        vala.removeEventListener('load', aoCarregar);
+        window.removeEventListener('message', aoResponder);
         liberar();
         mostrar('alerta',
-          '<strong>Não conseguimos confirmar o envio.</strong> Pode ter gravado, ' +
-          'mas não dá para ter certeza. Para garantir, ' +
+          '<strong>Não conseguimos confirmar o envio.</strong> Para garantir, ' +
           '<a href="' + linkDeEmail(email, perfil) + '"><strong>clique aqui e nos ' +
           'mande um e-mail</strong></a>.');
       }, ESPERA_MAXIMA);
 
-      vala.addEventListener('load', aoCarregar);
+      window.addEventListener('message', aoResponder);
     });
   }
 

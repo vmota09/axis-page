@@ -86,13 +86,27 @@ funcionar e some é pior que um que assume a limitação.
 
 O Apps Script não devolve cabeçalho de CORS de forma confiável. Um `fetch()`
 comum é bloqueado pelo navegador; um `fetch` com `mode:'no-cors'` passa, mas
-volta cego — a página não teria como saber se gravou, e diria "recebido" no
-escuro. Envio de formulário para um `<iframe>` oculto não passa por CORS, e o
-evento de carga do iframe confirma que o servidor respondeu. Se em 15 segundos
-não responder, a página assume a dúvida e oferece o e-mail.
+volta cego. Envio de formulário para um `<iframe>` oculto não passa por CORS.
 
-Isso está protegido por teste: trocar o `target` do formulário por um `fetch`
-quebra a suíte.
+### Como a página sabe que gravou
+
+O Apps Script responde com um HTML mínimo que avisa a página por
+`postMessage`. **O evento de carga do iframe não serve como confirmação** — foi
+um bug real aqui: com a implantação configurada como "Somente eu", o Google
+devolve um 403, o iframe carrega esse 403 normalmente e dispara o mesmo evento.
+A página dizia "recebido" sem nada ter sido gravado.
+
+Agora só a mensagem vinda de dentro do script conta, e ela é checada por
+`evento.source` para não aceitar mensagem de outra origem. Sem resposta em 15
+segundos, a página assume a dúvida em vez de fingir sucesso.
+
+Se um dia a planilha parar de receber, o primeiro lugar para olhar é
+**Implantar → Gerenciar implantações → Quem pode acessar**, que precisa estar
+em *Qualquer pessoa*. Um jeito rápido de checar: abrir a URL `/exec` numa aba
+anônima — tem que aparecer o texto do endpoint, não uma tela de login nem 403.
+
+Isso está protegido por teste: trocar o `target` do formulário por um `fetch`,
+ou voltar a confirmar pelo `load` do iframe, quebra a suíte.
 
 ### Duplicatas e privacidade
 
