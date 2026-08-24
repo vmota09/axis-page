@@ -1827,7 +1827,14 @@ footer{border-top:1px solid var(--borda);padding:52px 0 40px;background:var(--gr
       var aoResponder = function (evento) {
         if (respondeu) return;
         if (!evento.data || evento.data.axis !== 'cadastro') return;
-        if (evento.source !== vala.contentWindow) return;
+
+        /* Aceita se veio do nosso iframe OU de uma origem do Apps Script. O
+           Google redireciona a resposta para googleusercontent.com, e em alguns
+           navegadores a comparação de janela falha depois desse salto — o que
+           faria a página ignorar uma confirmação legítima. */
+        var doIframe = evento.source === vala.contentWindow;
+        var daGoogle = /^https:\/\/([\w-]+\.)*google(usercontent)?\.com$/.test(evento.origin || '');
+        if (!doIframe && !daGoogle) return;
 
         respondeu = true;
         clearTimeout(prazo);

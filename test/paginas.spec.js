@@ -53,7 +53,8 @@ describe('A página principal', () => {
     // "recebido" sem nada ter sido gravado — foi um bug real aqui.
     expect(indexHtml).toContain("addEventListener('message'");
     expect(indexHtml).toContain("evento.data.axis !== 'cadastro'");
-    expect(indexHtml).toContain('evento.source !== vala.contentWindow');
+    expect(indexHtml).toContain('evento.source === vala.contentWindow');
+    expect(indexHtml).toContain('googleusercontent');
     expect(indexHtml).not.toContain("vala.addEventListener('load'");
   });
 
